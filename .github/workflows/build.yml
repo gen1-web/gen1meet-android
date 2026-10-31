@@ -1,0 +1,42 @@
+name: Build Gen1 Meet APK
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+      - name: Unpack project
+        run: |
+          mkdir -p build-src
+          base64 -d project.b64 | tar xz -C build-src
+      - name: Build APK
+        working-directory: build-src
+        env:
+          VCODE: ${{ github.run_number }}
+        run: gradle assembleRelease --no-daemon --stacktrace
+      - name: Rename
+        run: cp build-src/app/build/outputs/apk/release/app-release.apk Gen1-Meet.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Gen1-Meet-apk
+          path: Gen1-Meet.apk
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Gen1 Meet v1.0.${{ github.run_number }}
+          body: Install Gen1-Meet.apk on Android.
+          make_latest: true
+          files: Gen1-Meet.apk
