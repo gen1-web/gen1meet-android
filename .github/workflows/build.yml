@@ -7,14 +7,13 @@ permissions:
   contents: write
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
@@ -22,6 +21,7 @@ jobs:
         run: |
           mkdir -p build-src
           base64 -d project.b64 | tar xz -C build-src
+          echo "sdk.dir=$ANDROID_HOME" > build-src/local.properties
       - name: Build APK
         working-directory: build-src
         env:
